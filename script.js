@@ -121,7 +121,7 @@ video.addEventListener('loadedmetadata', () => {
 
 // Add active state to navigation links
 const sections = document.querySelectorAll('section');
-const navLinks = document.querySelectorAll('.nav-links a');
+const navLinksItems = document.querySelectorAll('.nav-links a');
 
 window.addEventListener('scroll', () => {
     let current = '';
@@ -133,7 +133,7 @@ window.addEventListener('scroll', () => {
         }
     });
 
-    navLinks.forEach(link => {
+    navLinksItems.forEach(link => {
         link.style.color = '#ffffff';
         if (link.getAttribute('href').slice(1) === current) {
             link.style.color = '#FFD700';
