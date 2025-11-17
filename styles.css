@@ -95,6 +95,7 @@ nav {
     display: flex;
     gap: 2rem;
     list-style: none;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
 .nav-links a {
@@ -106,6 +107,13 @@ nav {
 
 .nav-links a:hover {
     color: #FFD700;
+}
+
+/* Ensure nav-links is hidden on mobile by default */
+@media (max-width: 768px) {
+    .nav-links {
+        display: flex !important;
+    }
 }
 
 /* Hamburger Menu (Hidden by default) */
@@ -438,13 +446,19 @@ footer {
         padding: 1rem 5%;
     }
 
+    .nav-content {
+        flex-wrap: nowrap;
+    }
+
     .logo {
         font-size: 1.5rem;
+        flex: 1;
     }
 
     /* Show hamburger menu on mobile */
     .hamburger {
         display: flex;
+        order: 2;
     }
 
     .nav-links {
@@ -461,6 +475,7 @@ footer {
         transform: translateX(-100%);
         opacity: 0;
         transition: transform 0.3s ease, opacity 0.3s ease;
+        display: flex !important;
     }
 
     .nav-links.active {
@@ -558,6 +573,7 @@ footer {
 
     .logo {
         font-size: 1.2rem;
+        flex: 1;
     }
 
     /* Hamburger stays visible on smaller phones */
@@ -568,6 +584,7 @@ footer {
     .nav-links {
         gap: 0;
         font-size: 0.8rem;
+        display: flex !important;
     }
 
     .nav-links a {
