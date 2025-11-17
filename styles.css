@@ -109,13 +109,6 @@ nav {
     color: #FFD700;
 }
 
-/* Ensure nav-links is hidden on mobile by default */
-@media (max-width: 768px) {
-    .nav-links {
-        display: flex !important;
-    }
-}
-
 /* Hamburger Menu (Hidden by default) */
 .hamburger {
     display: none;
@@ -459,8 +452,10 @@ footer {
     .hamburger {
         display: flex;
         order: 2;
+        flex-shrink: 0;
     }
 
+    /* Hide nav-links by default on mobile, show when active */
     .nav-links {
         position: fixed;
         top: 70px;
@@ -474,13 +469,15 @@ footer {
         z-index: 999;
         transform: translateX(-100%);
         opacity: 0;
-        transition: transform 0.3s ease, opacity 0.3s ease;
-        display: flex !important;
+        visibility: hidden;
+        transition: transform 0.3s ease, opacity 0.3s ease, visibility 0.3s ease;
+        display: flex;
     }
 
     .nav-links.active {
         transform: translateX(0);
         opacity: 1;
+        visibility: visible;
     }
 
     .nav-links li {
@@ -579,12 +576,13 @@ footer {
     /* Hamburger stays visible on smaller phones */
     .hamburger {
         display: flex;
+        flex-shrink: 0;
     }
 
     .nav-links {
         gap: 0;
         font-size: 0.8rem;
-        display: flex !important;
+        display: flex;
     }
 
     .nav-links a {
