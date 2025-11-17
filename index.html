@@ -11,7 +11,7 @@
     <div class="video-background">
         <video id="bgVideo" muted playsinline>
             <!-- Replace this with your actual video file -->
-            <source src="vecteezy_v8-pistons-engine-infinite-loop-animation_51546360.mp4" type="video/mp4">
+            <source src="your-video-file.mp4" type="video/mp4">
             Your browser does not support the video tag.
         </video>
         <div class="video-placeholder">
@@ -28,13 +28,25 @@
     <nav>
         <div class="nav-content">
             <div class="logo">SpareTeck Solutions</div>
-            <ul class="nav-links">
+            
+            <!-- Hamburger Menu Button (Mobile Only) -->
+            <button class="hamburger" id="hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            
+            <!-- Navigation Links -->
+            <ul class="nav-links" id="navLinks">
                 <li><a href="#home">Home</a></li>
                 <li><a href="#about">About Us</a></li>
                 <li><a href="#reviews">Reviews</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
         </div>
+        
+        <!-- Overlay for mobile menu -->
+        <div class="nav-overlay" id="navOverlay"></div>
     </nav>
 
     <!-- Home Section -->

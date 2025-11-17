@@ -8,8 +8,51 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 behavior: 'smooth',
                 block: 'start'
             });
+            
+            // Close mobile menu after clicking a link
+            closeMobileMenu();
         }
     });
+});
+
+// Mobile Menu Toggle
+const hamburger = document.getElementById('hamburger');
+const navLinks = document.getElementById('navLinks');
+const navOverlay = document.getElementById('navOverlay');
+
+function openMobileMenu() {
+    hamburger.classList.add('active');
+    navLinks.classList.add('active');
+    navOverlay.classList.add('active');
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when menu is open
+}
+
+function closeMobileMenu() {
+    hamburger.classList.remove('active');
+    navLinks.classList.remove('active');
+    navOverlay.classList.remove('active');
+    document.body.style.overflow = ''; // Re-enable scrolling
+}
+
+function toggleMobileMenu() {
+    if (navLinks.classList.contains('active')) {
+        closeMobileMenu();
+    } else {
+        openMobileMenu();
+    }
+}
+
+// Hamburger click event
+hamburger.addEventListener('click', toggleMobileMenu);
+
+// Overlay click event - close menu when clicking outside
+navOverlay.addEventListener('click', closeMobileMenu);
+
+// Close menu on window resize if opened
+window.addEventListener('resize', () => {
+    if (window.innerWidth > 768 && navLinks.classList.contains('active')) {
+        closeMobileMenu();
+    }
 });
 
 // Video control based on scroll
@@ -25,7 +68,7 @@ function updateVideoTime() {
     const scrollFraction = scrollPosition / maxScroll;
     
     // Map scroll to video time (0-18 seconds)
-    const videoDuration = 2; // 18 seconds total
+    const videoDuration = 18; // 18 seconds total
     targetVideoTime = scrollFraction * videoDuration;
     
     // Hide placeholder once video starts
@@ -47,7 +90,7 @@ function animateVideo() {
     if (video.readyState >= 2) {
         // Smooth interpolation towards target time
         const diff = targetVideoTime - currentVideoTime;
-        currentVideoTime += diff * 0.65; // Smooth factor (0.1 = smooth, 1 = instant)
+        currentVideoTime += diff * 0.1; // Smooth factor (0.1 = smooth, 1 = instant)
         
         // Set video time
         video.currentTime = currentVideoTime;
