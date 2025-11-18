@@ -1,8 +1,4 @@
-/* ===== script.js (full updated) ===== */
-
-/* -------------------------
-   Smooth scrolling for anchor links
-   ------------------------- */
+// Smooth scrolling for navigation links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         e.preventDefault();
@@ -12,212 +8,122 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 behavior: 'smooth',
                 block: 'start'
             });
-            // Close mobile menu if open
-            if (typeof closeMobileMenu === 'function') closeMobileMenu();
+            
+            // Close mobile menu after clicking a link
+            closeMobileMenu();
         }
     });
 });
 
-/* -------------------------
-   Mobile menu toggle + overlay
-   ------------------------- */
+// Mobile Menu Toggle
 const hamburger = document.getElementById('hamburger');
 const navLinks = document.getElementById('navLinks');
 const navOverlay = document.getElementById('navOverlay');
 
 function openMobileMenu() {
-    if (!hamburger || !navLinks || !navOverlay) return;
     hamburger.classList.add('active');
     navLinks.classList.add('active');
     navOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden'; // Prevent scrolling when menu is open
 }
+
 function closeMobileMenu() {
-    if (!hamburger || !navLinks || !navOverlay) return;
     hamburger.classList.remove('active');
     navLinks.classList.remove('active');
     navOverlay.classList.remove('active');
-    document.body.style.overflow = '';
+    document.body.style.overflow = ''; // Re-enable scrolling
 }
+
 function toggleMobileMenu() {
-    if (!navLinks) return;
-    if (navLinks.classList.contains('active')) closeMobileMenu();
-    else openMobileMenu();
+    if (navLinks.classList.contains('active')) {
+        closeMobileMenu();
+    } else {
+        openMobileMenu();
+    }
 }
 
-if (hamburger) hamburger.addEventListener('click', toggleMobileMenu);
-if (navOverlay) navOverlay.addEventListener('click', closeMobileMenu);
+// Hamburger click event
+hamburger.addEventListener('click', toggleMobileMenu);
 
-// Close menu on resize (desktop fallback)
+// Overlay click event - close menu when clicking outside
+navOverlay.addEventListener('click', closeMobileMenu);
+
+// Close menu on window resize if opened
 window.addEventListener('resize', () => {
-    if (window.innerWidth > 768 && navLinks && navLinks.classList.contains('active')) {
+    if (window.innerWidth > 768 && navLinks.classList.contains('active')) {
         closeMobileMenu();
     }
 });
 
-/* -------------------------
-   Scroll-driven background video (batched seeks)
-   - batched seeks (~25fps)
-   - small-diff threshold to ignore micro adjustments
-   - idle stop to save CPU
-   - visibility handling
-   ------------------------- */
+// Video control based on scroll
 const video = document.getElementById('bgVideo');
-
-const VIDEO_FALLBACK_DURATION = 18; // seconds if metadata not available
-const SMALL_DIFF_THRESHOLD = 0.006; // 6 ms (ignore micro seeks)
-const SMOOTH_FACTOR = 0.45;         // 0..1 (higher = snappier)
-const SEEK_BATCH_MS = 40;          // throttle seeks to ~25 updates/sec
-const IDLE_STOP_MS = 250;          // stop batching when idle
-
-let videoDuration = VIDEO_FALLBACK_DURATION;
-let targetVideoTime = 0;
+let hasStarted = false;
 let currentVideoTime = 0;
+let targetVideoTime = 0;
 
-let lastScrollTime = 0;
-let batchTimer = null;
-let lastSeekAt = 0;
-let isActiveBatch = false;
-
-// Safety: if video element missing, skip video logic
-function computeTargetFromScroll() {
-    if (!video) return;
-    const scrollPosition = window.pageYOffset || document.documentElement.scrollTop || 0;
-    const maxScroll = Math.max(document.body.scrollHeight - window.innerHeight, 1);
-    const scrollFraction = Math.min(Math.max(scrollPosition / maxScroll, 0), 1);
+// Calculate video playback based on scroll position
+function updateVideoTime() {
+    const scrollPosition = window.pageYOffset;
+    const maxScroll = document.body.scrollHeight - window.innerHeight;
+    const scrollFraction = scrollPosition / maxScroll;
+    
+    // Map scroll to video time (0-18 seconds)
+    const videoDuration = 18; // 18 seconds total
     targetVideoTime = scrollFraction * videoDuration;
-}
-
-// Called on scroll/wheel/touch/hashchange to indicate we need updates
-function markScrollUpdated() {
-    if (!video) return;
-    computeTargetFromScroll();
-    lastScrollTime = performance.now();
-    if (!isActiveBatch) startBatchTimer();
-}
-
-// Start a short batching interval for interpolation + seeks
-function startBatchTimer() {
-    if (isActiveBatch || !video) return;
-    isActiveBatch = true;
-    // Immediate pass for snappy response
-    performBatchPass();
-
-    batchTimer = setInterval(() => {
-        const now = performance.now();
-        // Stop if idle
-        if (now - lastScrollTime > IDLE_STOP_MS) {
-            stopBatchTimer();
-            return;
+    
+    // Hide placeholder once video starts
+    if (!hasStarted && scrollPosition > 0) {
+        hasStarted = true;
+        const placeholder = document.querySelector('.video-placeholder');
+        if (placeholder) {
+            placeholder.style.opacity = '0';
+            placeholder.style.transition = 'opacity 0.5s';
+            setTimeout(() => {
+                placeholder.style.display = 'none';
+            }, 500);
         }
-        performBatchPass();
-    }, SEEK_BATCH_MS);
-}
-
-// Stop batching to save CPU
-function stopBatchTimer() {
-    if (!isActiveBatch) return;
-    clearInterval(batchTimer);
-    batchTimer = null;
-    isActiveBatch = false;
-}
-
-// One interpolation + optional seek pass
-function performBatchPass() {
-    if (!video || video.readyState < 2 || document.hidden) return;
-
-    const diff = targetVideoTime - currentVideoTime;
-
-    // Snap if very close
-    if (Math.abs(diff) <= SMALL_DIFF_THRESHOLD) {
-        currentVideoTime = targetVideoTime;
-        // final small seek if video.currentTime significantly different
-        if (Math.abs(video.currentTime - currentVideoTime) > 0.001) {
-            try { video.currentTime = currentVideoTime; } catch (e) {}
-            lastSeekAt = performance.now();
-        }
-        return;
-    }
-
-    // Interpolate toward target (exponential-like)
-    currentVideoTime += diff * SMOOTH_FACTOR;
-
-    // Clamp
-    currentVideoTime = Math.max(0, Math.min(currentVideoTime, videoDuration - 0.001));
-
-    const now = performance.now();
-    if (now - lastSeekAt >= SEEK_BATCH_MS) {
-        try {
-            video.currentTime = currentVideoTime;
-        } catch (err) {
-            // mobile browsers sometimes throw; ignore
-        }
-        lastSeekAt = now;
     }
 }
 
-// Hook events with passive listeners for better scroll performance
-if (typeof window !== 'undefined') {
-    window.addEventListener('scroll', markScrollUpdated, { passive: true });
-    window.addEventListener('wheel', markScrollUpdated, { passive: true });
-    window.addEventListener('touchmove', markScrollUpdated, { passive: true });
-    window.addEventListener('hashchange', () => {
-        computeTargetFromScroll();
-        markScrollUpdated();
-    });
+// Smooth video playback animation
+function animateVideo() {
+    if (video.readyState >= 2) {
+        // Smooth interpolation towards target time
+        const diff = targetVideoTime - currentVideoTime;
+        currentVideoTime += diff * 0.1; // Smooth factor (0.1 = smooth, 1 = instant)
+        
+        // Set video time
+        video.currentTime = currentVideoTime;
+    }
+    
+    requestAnimationFrame(animateVideo);
 }
 
-// Visibility handling: stop while hidden, resume when visible
-document.addEventListener('visibilitychange', () => {
-    if (!video) return;
-    if (document.hidden) {
-        stopBatchTimer();
-    } else {
-        computeTargetFromScroll();
-        markScrollUpdated();
+// Start animation loop
+animateVideo();
+
+// Update target time on scroll
+let ticking = false;
+window.addEventListener('scroll', () => {
+    if (!ticking) {
+        window.requestAnimationFrame(() => {
+            updateVideoTime();
+            ticking = false;
+        });
+        ticking = true;
     }
 });
 
-// When metadata loaded, set duration and warm decoder
-if (video) {
-    video.addEventListener('loadedmetadata', () => {
-        if (typeof video.duration === 'number' && isFinite(video.duration) && video.duration > 0) {
-            // Limit duration to avoid accidental huge video mapping
-            videoDuration = Math.min(video.duration, 60 * 5);
-        } else {
-            videoDuration = VIDEO_FALLBACK_DURATION;
-        }
+// Initialize video on load
+video.addEventListener('loadedmetadata', () => {
+    updateVideoTime();
+});
 
-        // Initialize mapping
-        computeTargetFromScroll();
-        currentVideoTime = targetVideoTime;
-
-        // Try to warm up decoder (muted play may be blocked; ignore errors)
-        try {
-            video.muted = true;
-            video.playsInline = true;
-            video.preload = 'auto';
-            video.play().catch(() => { /* autoplay blocked - ok */ });
-        } catch (e) {}
-
-        // initial seek to correct frame
-        try { video.currentTime = currentVideoTime; } catch (e) {}
-    });
-
-    // If video already loaded before script ran
-    if (video.readyState >= 2) {
-        // simulate loadedmetadata to initialize
-        video.dispatchEvent(new Event('loadedmetadata'));
-    }
-}
-
-/* -------------------------
-   Navigation link highlight based on sections
-   ------------------------- */
+// Add active state to navigation links
 const sections = document.querySelectorAll('section');
 const navLinksItems = document.querySelectorAll('.nav-links a');
 
-function highlightNav() {
+window.addEventListener('scroll', () => {
     let current = '';
     sections.forEach(section => {
         const sectionTop = section.offsetTop;
@@ -233,16 +139,4 @@ function highlightNav() {
             link.style.color = '#FFD700';
         }
     });
-}
-
-// Use passive scroll for highlight too; run at reasonable rate
-window.addEventListener('scroll', highlightNav, { passive: true });
-// run once on load
-highlightNav();
-
-/* -------------------------
-   Optional: small safety polyfills / no-ops if elements missing
-   ------------------------- */
-if (!hamburger) {
-    // no hamburger — nothing to do
-}
+});

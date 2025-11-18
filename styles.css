@@ -44,7 +44,6 @@ body {
     transform: translate(-50%, -50%);
     object-fit: cover;
     opacity: 0.4;
-    pointer-events: none;
 }
 
 .video-placeholder {
