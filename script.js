@@ -85,19 +85,30 @@ function updateVideoTime() {
     }
 }
 
+let scrollUpdated = false;
+
+window.addEventListener('scroll', () => {
+    scrollUpdated = true;
+    updateVideoTime();
+});
+
+
 // Smooth video playback animation
 function animateVideo() {
     if (video.readyState >= 2) {
-        // Smooth interpolation towards target time
+
         const diff = targetVideoTime - currentVideoTime;
-        currentVideoTime += diff * 0.1; // Smooth factor (0.1 = smooth, 1 = instant)
-        
-        // Set video time
-        video.currentTime = currentVideoTime;
+
+        // Skip micro updates under ~5ms
+        if (Math.abs(diff) > 0.005) {
+            currentVideoTime += diff * 0.25;
+            video.currentTime = currentVideoTime;
+        }
     }
-    
+
     requestAnimationFrame(animateVideo);
 }
+
 
 // Start animation loop
 animateVideo();
