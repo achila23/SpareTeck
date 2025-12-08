@@ -90,7 +90,7 @@ function animateVideo() {
     if (video.readyState >= 2) {
         // Smooth interpolation towards target time
         const diff = targetVideoTime - currentVideoTime;
-        currentVideoTime += diff * 0.1; // Smooth factor (0.1 = smooth, 1 = instant)
+        currentVideoTime += diff * 0.9; // Smooth factor (0.1 = smooth, 1 = instant)
         
         // Set video time
         video.currentTime = currentVideoTime;
